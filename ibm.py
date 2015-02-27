@@ -3,6 +3,7 @@ import collections
 import re
 import string
 import sys
+import heapq
 
 from collections import defaultdict
 from itertools import izip
@@ -14,11 +15,16 @@ class IBM:
         self.words = {} #2d array of [e][f] word mapping probabilities
         self.dictionary = defaultdict(lambda: "")
         self.sentences = sentences[:];
+        self.grams_n = 3
+#        self.ngrams = ngrams()
         self.english_words = set()
         self.spanish_words = set()
-        self.NUM_ROUND = 1
         self.progress = 0
         self.maxIter = 10
+        self.threshold = .3
+
+    def set_threshold(self, thres):
+        self.threshold = thres
 
     def parse_words(self):
 
@@ -61,17 +67,21 @@ class IBM:
         return True
 
     def makeDict(self):
+        print "Transforming to map..."
         for es_word in self.spanish_words:
-            max_prob = -1
+            words = []
+
             for en_word in self.words[es_word]:
-                if self.words[es_word][en_word] > max_prob:
-                    max_prob = self.words[es_word][en_word]
-                    self.dictionary[es_word] = en_word
+                prob = self.words[es_word][en_word]
+                heapq.heappush(words, (prob, en_word))
+                if len(words) > self.grams_n: heapq.heappop(words)
+
+            self.dictionary[es_word] = heapq.nlargest(self.grams_n, words)
 
     def preprocess(self):
         self.parse_words()
         newMap = self.EM()               # called over and over again
-        while (not self.mapEquals(self.words, newMap)):
+        while (True):
             if self.progress % 1 is 0:
                 sys.stdout.write(str(self.progress) + ".."),
                 sys.stdout.flush()
@@ -79,17 +89,39 @@ class IBM:
             self.words = newMap
             newMap = self.EM()
 
+        print "done!"
         self.words = newMap
         self.makeDict()
 
         return self.words
 
-    def translate(self, sentence):
-        trans_sent = ""
-        for word in sentence.split():
-            trans_sent += " " + self.dictionary[word]
+    def addCandidatesToSentence(self, partial, sentence, sentences):
+        if len(sentence) is 0:
+            sentences.append(partial[1:])
+            return
 
-        return trans_sent
+        word = sentence[0]
+        candidates = self.dictionary[word]
+
+        if len(candidates) is 0:
+            self.addCandidatesToSentence(partial + " [" + word + "]", sentence[1:], sentences)
+            return
+
+        if candidates[0][0] < self.threshold:
+            self.addCandidatesToSentence(partial + " " + candidates[0][1], sentence[1:], sentences)
+            return
+
+        for i in range(len(candidates)):
+            if i < self.grams_n and candidates[i][0] > self.threshold:
+                self.addCandidatesToSentence(partial + " " + candidates[i][1], sentence[1:], sentences)
+
+    def translate(self, sentence):
+        sentences = []
+
+        self.addCandidatesToSentence("", sentence.split(), sentences)
+        print sentences
+
+        return ""
 
 def loadSentences(englishFileName, foreignFileName) :
     sentences = []
@@ -113,23 +145,26 @@ def main():
     ibm = IBM(loadSentences("europarl-v7.es-en.en", "europarl-v7.es-en.es"))
 #    ibm = IBM(loadSentences("test.en", "test.es"))
     result = ibm.preprocess()
-    print '\n\n'
+    print 'Preproccess done! \n'
 
     while (True):
-        kind = raw_input('Type (f, s): ')
-        if kind is not "f" and kind is not "s": continue
-        sentence = raw_input('==> ')
+        kind = raw_input('Type (f, s, t): ')
+        if kind is not "f" and kind is not "s" and kind is not "t": continue
+        input_data = raw_input('==> ')
         if kind is "f":
             try:
-                with open(sentence, 'r') as testFile:
+                with open(input_data, 'r') as testFile:
                     for testSentence in testFile:
                         print ibm.translate(sanitize(testSentence))
             except:
                 print "Filename invalid"
                 continue
-        else:
-            result = ibm.translate(sanitize(sentence))
+        elif kind is "s":
+            result = ibm.translate(sanitize(input_data))
             print result
+        elif kind is "t":
+            ibm.set_threshold(float(input_data))
+            print "Set threshold to: " + input_data
 
 if __name__ == '__main__':
     main()
