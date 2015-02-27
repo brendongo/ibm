@@ -18,6 +18,7 @@ class IBM:
         self.spanish_words = set()
         self.NUM_ROUND = 1
         self.progress = 0
+        self.maxIter = 10
 
     def parse_words(self):
 
@@ -74,6 +75,7 @@ class IBM:
             if self.progress % 1 is 0:
                 sys.stdout.write('='),
                 sys.stdout.flush()
+            if self.progress is self.maxIter: break
             self.words = newMap
             newMap = self.EM()
 
