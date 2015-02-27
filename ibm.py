@@ -18,12 +18,11 @@ class IBM:
         self.dictionary = defaultdict(lambda: "")
         self.sentences = sentences[:];
         self.grams_n = 3
-#        self.ngrams = ngrams()
         self.english_words = set()
         self.spanish_words = set()
         self.progress = 0
         self.maxIter = 10
-        self.threshold = .2
+        self.threshold = .4
 
     def set_threshold(self, thres):
         self.threshold = thres
@@ -167,7 +166,7 @@ def main():
     trigramLanguageModel = TrigramModel("data/ngrams.txt")
     print 'Trigram Model Loaded! \n'
 
-    ibm = IBM(loadSentences("europarl-v7.es-en.en", "europarl-v7.es-en.es"))
+    ibm = IBM(loadSentences("data/es-en/train/europarl-v7.es-en.en", "data/es-en/train/europarl-v7.es-en.es"))
     # ibm = IBM(loadSentences("test.en", "test.es"))
     result = ibm.preprocess()
     print 'Preproccess done! \n'
