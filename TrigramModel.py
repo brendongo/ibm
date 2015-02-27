@@ -1,11 +1,5 @@
 import math, collections
 
-
-# usage:
-# trainPath = '../data/holbrook-tagged-train.dat'
-# trainingCorpus = HolbrookCorpus(trainPath) 
-# trigramLanguageModel = TrigramModel(trainingcorpus)
-# score = trigramLanguageModel.score(string here)
 class TrigramModel:
 
   def __init__(self, corpus):
@@ -20,24 +14,33 @@ class TrigramModel:
     """ Takes a corpus and trains your language model. 
         Compute any counts or other corpus statistics in this function.
     """  
-    for sentence in corpus.corpus:
-      for i in xrange(0, len(sentence.data) - 2):
-        first = sentence.data[i].word
-        second = sentence.data[i+1].word
-        third = sentence.data[i+2].word
-        trigram = first + "&" + second + "&" + third
-        self.trigramCounts[trigram] = self.trigramCounts[trigram] + 1
-
-      for i in xrange(0, len(sentence.data) - 1):
-        first = sentence.data[i].word
-        second = sentence.data[i+1].word
-        bigram = first + "&" + second
-        self.bigramCounts[bigram] = self.bigramCounts[bigram] + 1
+    nGramsFile = open(corpus, 'r')
+    for line in nGramsFile:
+      count, first, second, third = line.split()
+      count = int(count)
       
-      for datum in sentence.data:  
-        first = datum.word
-        self.unigramCounts[first] = self.unigramCounts[first] + 1
-        self.unigramtotal = self.unigramtotal + 1
+      trigram = first + "&" + second + "&" + third
+      self.trigramCounts[trigram] += count
+      
+      bigram = first + "&" + second
+      self.bigramCounts[bigram] += count
+      bigram = second + "&" + third
+      self.bigramCounts[bigram] += count
+      
+      self.unigramCounts[first] += count
+      self.unigramCounts[second] += count
+      self.unigramCounts[third] += count
+      self.unigramtotal += 3*count     
+
+  def findMostLikely(self, sentences):
+    bestScore = float('-inf')
+    bestSentence = ""
+    for sentence in sentences:
+      sentenceScore = self.score(sentence.split())
+      if sentenceScore > bestScore:
+        bestScore = sentenceScore
+        bestSentence = sentence
+    return bestSentence
 
   def score(self, sentence):
     """ Takes a list of strings as argument and returns the log-probability of the 
@@ -62,10 +65,10 @@ class TrigramModel:
         score -= math.log(bigramcount)
       elif bigramcount > 0:  
         #Bi-gram
-        score += math.log(bigramcount)
-        score -= math.log(self.unigramCounts[first])
+        score += 0.1*math.log(bigramcount)
+        score -= 0.1*math.log(self.unigramCounts[first])
       else:
         #Laplace Unigram
-        score += math.log(self.unigramCounts[second] + 1) 
-        score -= math.log(self.unigramtotal + len(self.unigramCounts))  
-    return score
+        score += 0.01*math.log(self.unigramCounts[second] + 1) 
+        score -= 0.01*math.log(self.unigramtotal + len(self.unigramCounts))  
+    return -score

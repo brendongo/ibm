@@ -4,6 +4,7 @@ import re
 import string
 import sys
 import heapq
+from TrigramModel import TrigramModel
 #import nltk
 
 from collections import defaultdict
@@ -22,7 +23,7 @@ class IBM:
         self.spanish_words = set()
         self.progress = 0
         self.maxIter = 10
-        self.threshold = .3
+        self.threshold = .2
 
     def set_threshold(self, thres):
         self.threshold = thres
@@ -118,11 +119,9 @@ class IBM:
 
     def translate(self, sentence):
         sentences = []
-
         self.addCandidatesToSentence("", sentence.split(), sentences)
-        print sentences
-
-        return ""
+        # print sentences
+        return sentences
 
 def loadSentences(englishFileName, foreignFileName) :
     sentences = []
@@ -163,13 +162,17 @@ def posParse(sentence):
 
     return result
 
-
 def main():
-    #ibm = IBM(loadSentences("europarl-v7.es-en.en", "europarl-v7.es-en.es"))
-    ibm = IBM(loadSentences("test.en", "test.es"))
+    # Initialize Trigram Model
+    trigramLanguageModel = TrigramModel("data/ngrams.txt")
+    print 'Trigram Model Loaded! \n'
+
+    ibm = IBM(loadSentences("europarl-v7.es-en.en", "europarl-v7.es-en.es"))
+    # ibm = IBM(loadSentences("test.en", "test.es"))
     result = ibm.preprocess()
     print 'Preproccess done! \n'
 
+    
     while (True):
         kind = raw_input('Type (f, s, t): ')
         if kind is not "f" and kind is not "s" and kind is not "t": continue
@@ -178,14 +181,15 @@ def main():
             try:
                 with open(input_data, 'r') as testFile:
                     for testSentence in testFile:
-                        translation = ibm.translate(sanitize(testSentence))
-                        trans_file.write(translation)
+                        result = ibm.translate(sanitize(testSentence)) #returns array of translations
+                        result = trigramLanguageModel.findMostLikely(result) #returns best scoring result
+                        print result
             except:
                 print "Filename invalid"
                 continue
         elif kind is "s":
-            result = ibm.translate(sanitize(input_data))
-#            result = posParse(result)
+            result = ibm.translate(sanitize(input_data)) #returns array of translations
+            result = trigramLanguageModel.findMostLikely(result) #returns best scoring result
             print result
         elif kind is "t":
             ibm.set_threshold(float(input_data))
