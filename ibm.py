@@ -10,8 +10,8 @@ from itertools import izip
 class IBM:
 
     def __init__(self, sentences):
-        # For holding the data - initialized in read_data()
-        self.words = {} #2d array of [e][f] word mapping probabilities
+        # for holding the data - initialized in read_data()
+        self.words = {} # 2d array of [e][f] word mapping probabilities
         self.dictionary = defaultdict(lambda: "")
         self.sentences = sentences[:];
         self.english_words = set()
@@ -70,7 +70,7 @@ class IBM:
 
     def preprocess(self):
         self.parse_words()
-        newMap = self.EM()               # called over and over again
+        newMap = self.EM()               
         while (not self.mapEquals(self.words, newMap)):
             if self.progress % 1 is 0:
                 sys.stdout.write(str(self.progress) + ".."),
