@@ -88,7 +88,12 @@ class IBM:
     def translate(self, sentence):
         trans_sent = ""
         for word in sentence.split():
-            trans_sent += " " + self.dictionary[word]
+            # checks for plurals
+            if self.dictionary[word] is "" and word[len(word) - 1] is "s":
+                word = word[0:len(word) - 1]
+                trans_sent += " " + self.dictionary[word] + "s"
+            else:
+                trans_sent += " " + self.dictionary[word]
 
         return trans_sent
 
