@@ -4,6 +4,7 @@ import re
 import string
 import sys
 import heapq
+#import nltk
 
 from collections import defaultdict
 from itertools import izip
@@ -11,8 +12,8 @@ from itertools import izip
 class IBM:
 
     def __init__(self, sentences):
-        # For holding the data - initialized in read_data()
-        self.words = {} #2d array of [e][f] word mapping probabilities
+        # for holding the data - initialized in read_data()
+        self.words = {} # 2d array of [e][f] word mapping probabilities
         self.dictionary = defaultdict(lambda: "")
         self.sentences = sentences[:];
         self.grams_n = 3
@@ -140,10 +141,32 @@ def sanitize(sentence) :
     sentence = sentence.strip()
     return sentence
 
-def main():
+def posParse(sentence):
+    tokens = nltk.word_tokenize(sentence)
+    tags = nltk.pos_tag(tokens)
+    newSentence = []
 
-    ibm = IBM(loadSentences("europarl-v7.es-en.en", "europarl-v7.es-en.es"))
-#    ibm = IBM(loadSentences("test.en", "test.es"))
+    preLabel = "PLACEHOLDER"
+    for (word, label) in tags:
+        if preLabel == "NN" and (label == "JJ" or label == "RB"):
+            oldWord = newSentence[len(newSentence) - 1]
+            newSentence[len(newSentence) - 1] = word
+            newSentence.append(oldWord)
+        else:
+           newSentence.append(word)
+
+        preLabel = label
+
+    result = ""
+    for word in newSentence:
+        result += word + " "
+
+    return result
+
+
+def main():
+    #ibm = IBM(loadSentences("europarl-v7.es-en.en", "europarl-v7.es-en.es"))
+    ibm = IBM(loadSentences("test.en", "test.es"))
     result = ibm.preprocess()
     print 'Preproccess done! \n'
 
@@ -155,12 +178,14 @@ def main():
             try:
                 with open(input_data, 'r') as testFile:
                     for testSentence in testFile:
-                        print ibm.translate(sanitize(testSentence))
+                        translation = ibm.translate(sanitize(testSentence))
+                        trans_file.write(translation)
             except:
                 print "Filename invalid"
                 continue
         elif kind is "s":
             result = ibm.translate(sanitize(input_data))
+#            result = posParse(result)
             print result
         elif kind is "t":
             ibm.set_threshold(float(input_data))
