@@ -115,14 +115,21 @@ def main():
     result = ibm.preprocess()
     print '\n\n'
 
-    with open("testsentences", 'r') as testFile:
-        for testSentence in testFile:
-            result = ibm.translate(sanitize(testSentence))
-
     while (True):
+        kind = raw_input('Type (f, s): ')
+        if kind is not "f" and kind is not "s": continue
         sentence = raw_input('==> ')
-        result = ibm.translate(sanitize(sentence))
-        print result
+        if kind is "f":
+            try:
+                with open(sentence, 'r') as testFile:
+                    for testSentence in testFile:
+                        print ibm.translate(sanitize(testSentence))
+            except:
+                print "Filename invalid"
+                continue
+        else:
+            result = ibm.translate(sanitize(sentence))
+            print result
 
 if __name__ == '__main__':
     main()
