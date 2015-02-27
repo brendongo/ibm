@@ -3,6 +3,7 @@ import collections
 import re
 import string
 import sys
+import nltk
 
 from collections import defaultdict
 from itertools import izip
@@ -110,6 +111,8 @@ def sanitize(sentence) :
     return sentence
 
 def main():
+    test = "I am a man big and I work at a house green"
+
 
     ibm = IBM(loadSentences("europarl-v7.es-en.en", "europarl-v7.es-en.es"))
 #    ibm = IBM(loadSentences("test.en", "test.es"))
