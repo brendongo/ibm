@@ -109,12 +109,33 @@ def sanitize(sentence) :
     sentence = sentence.strip()
     return sentence
 
+def posParse(sentence):
+    tokens = nltk.word_tokenize(sentence)
+    tags = nltk.pos_tag(tokens)
+    newSentence = []
+
+    preLabel = "PLACEHOLDER"
+    for (word, label) in tags:
+        print word + ": " + label
+        if preLabel == "NN" and label == "JJ":
+            oldWord = newSentence[len(newSentence) - 1]
+            newSentence[len(newSentence) - 1] = word
+            newSentence.append(oldWord)
+        else:
+           newSentence.append(word)
+
+        preLabel = label
+
+    result = ""
+    for word in newSentence:
+        result += word + " "
+
+    return result
+
+
 def main():
-    test = "I am a man big and I work at a house green"
-
-
     ibm = IBM(loadSentences("europarl-v7.es-en.en", "europarl-v7.es-en.es"))
-#    ibm = IBM(loadSentences("test.en", "test.es"))
+    #ibm = IBM(loadSentences("test.en", "test.es"))
     result = ibm.preprocess()
     print '\n\n'
 
@@ -126,12 +147,15 @@ def main():
             try:
                 with open(sentence, 'r') as testFile:
                     for testSentence in testFile:
-                        print ibm.translate(sanitize(testSentence))
+                        translation = ibm.translate(sanitize(testSentence))
+                        print translation
+
             except:
                 print "Filename invalid"
                 continue
         else:
             result = ibm.translate(sanitize(sentence))
+            result = posParse(result)
             print result
 
 if __name__ == '__main__':
