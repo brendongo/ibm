@@ -73,7 +73,7 @@ class IBM:
         newMap = self.EM()               # called over and over again
         while (not self.mapEquals(self.words, newMap)):
             if self.progress % 1 is 0:
-                sys.stdout.write('='),
+                sys.stdout.write(str(self.progress) + ".."),
                 sys.stdout.flush()
             if self.progress is self.maxIter: break
             self.words = newMap
@@ -81,7 +81,6 @@ class IBM:
 
         self.words = newMap
         self.makeDict()
-        print self.dictionary
 
         return self.words
 
@@ -116,9 +115,13 @@ def main():
     result = ibm.preprocess()
     print '\n\n'
 
+    with open("testsentences", 'r') as testFile:
+        for testSentence in testFile:
+            result = ibm.translate(sanitize(testSentence))
+
     while (True):
         sentence = raw_input('==> ')
-        result = ibm.translate(sentence)
+        result = ibm.translate(sanitize(sentence))
         print result
 
 if __name__ == '__main__':
