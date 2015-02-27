@@ -121,8 +121,7 @@ def posParse(sentence):
 
     preLabel = "PLACEHOLDER"
     for (word, label) in tags:
-        print word + ": " + label
-        if preLabel == "NN" and label == "JJ":
+        if preLabel == "NN" and (label == "JJ" or label == "RB"):
             oldWord = newSentence[len(newSentence) - 1]
             newSentence[len(newSentence) - 1] = word
             newSentence.append(oldWord)
@@ -150,11 +149,11 @@ def main():
         sentence = raw_input('==> ')
         if kind is "f":
             try:
+                trans_file = open(sentence + "output", "w+")
                 with open(sentence, 'r') as testFile:
                     for testSentence in testFile:
                         translation = ibm.translate(sanitize(testSentence))
-                        print translation
-
+                        trans_file.write(translation)
             except:
                 print "Filename invalid"
                 continue
