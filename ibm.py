@@ -5,8 +5,8 @@ import string
 import sys
 import heapq
 from TrigramModel import TrigramModel
-#import nltk
-
+import nltk
+import chardet
 from collections import defaultdict
 from itertools import izip
 
@@ -134,42 +134,76 @@ def loadSentences(englishFileName, foreignFileName) :
     return sentences
 
 def sanitize(sentence) :
-    # sentence = sentence.lower()
+    sentence = sentence.lower()
     # puncRegex = re.compile("[" + string.punctuation + "]", re.IGNORECASE)
     # puncRegex = re.compile("[,.?]", re.IGNORECASE)
     # sentence = puncRegex.sub(' ', sentence)
     # sentence = sentence.strip()
     return sentence
 
-def posParse(sentence):
-    tokens = nltk.word_tokenize(sentence)
-    tags = nltk.pos_tag(tokens)
+def postProcess(result):
+    newResult = []
+    for sentence in result:
+        newResult.append(processSentence(sentence))
+
+    return newResult
+
+def takeOutUnicode(sentence):
     newSentence = []
-
-    preLabel = "PLACEHOLDER"
-    for (word, label) in tags:
-        if preLabel == "NN" and (label == "JJ" or label == "RB"):
-            oldWord = newSentence[len(newSentence) - 1]
-            newSentence[len(newSentence) - 1] = word
-            newSentence.append(oldWord)
-        else:
-           newSentence.append(word)
-
-        preLabel = label
-
+    for word in sentence.split():
+        encoding = chardet.detect(word)
+        if encoding['encoding'] == 'ascii' and word.isalpha():
+            newSentence.append(word)
     result = ""
     for word in newSentence:
         result += word + " "
-
     return result
 
+def makeSwitch(sentence, noun, adj):
+    allWords = sentence.split()
+    index = 0
+    prevWord = "NOT"
+    for word in allWords:
+        if prevWord == noun and word == adj:
+            allWords[index - 1] = adj
+            allWords[index] = noun
+            break
+        index += 1
+        prevWord = word
+    result = ""
+    for word in allWords:
+        result += word + " "
+    return result
+
+def processSentence(sentence):
+    processSentence = takeOutUnicode(sentence)
+    tokens = nltk.word_tokenize(processSentence)
+    tags = nltk.pos_tag(tokens)
+    # newSentence = []
+    oldWord = ""
+    preLabel = "PLACEHOLDER"
+    for (word, label) in tags:
+        if preLabel == "NN" and (label == "JJ" or label == "RB"):
+            # oldWord = newSentence[len(newSentence) - 1]
+            sentence = makeSwitch(sentence, oldWord, word)
+            # newSentence[len(newSentence) - 1] = word
+            # newSentence.append(oldWord)
+        # else:
+        #    newSentence.append(word)
+        preLabel = label
+        oldWord = word
+    # result = ""
+    # for word in newSentence:
+    #     result += word + " "
+    return sentence
+
 def main():
-    # Initialize Trigram Model
+    # initialize trigram model
     trigramLanguageModel = TrigramModel("data/ngrams.txt")
     print 'Trigram Model Loaded! \n'
 
     ibm = IBM(loadSentences("data/es-en/train/europarl-v7.es-en.en", "data/es-en/train/europarl-v7.es-en.es"))
-    # ibm = IBM(loadSentences("test.en", "test.es"))
+    #ibm = IBM(loadSentences("test.en", "test.es"))
     result = ibm.preprocess()
     print 'Preproccess done! \n'
 
@@ -181,16 +215,19 @@ def main():
         if kind is "f":
             try:
                 with open(input_data, 'r') as testFile:
+                    bleuFile = open("output-" + input_data, "w+")
                     for testSentence in testFile:
-                        result = ibm.translate(sanitize(testSentence)) #returns array of translations
-                        result = trigramLanguageModel.findMostLikely(result) #returns best scoring result
-                        print result
+                        result = ibm.translate(sanitize(testSentence)) # returns array of translations
+                        result = postProcess(result)
+                        #result = trigramLanguageModel.findMostLikely(result) # returns best scoring result
+                        bleuFile.write(result[0] + "\n")
+                    bleuFile.close()
             except:
                 print "Filename invalid"
                 continue
         elif kind is "s":
-            result = ibm.translate(sanitize(input_data)) #returns array of translations
-            result = trigramLanguageModel.findMostLikely(result) #returns best scoring result
+            result = ibm.translate(sanitize(input_data)) # returns array of translations
+            result = trigramLanguageModel.findMostLikely(result) # returns best scoring result
             print result
         elif kind is "t":
             ibm.set_threshold(float(input_data))

@@ -1,0 +1,29 @@
+BLEU SCORE RESULTS
+
+BASE SCORES - No Trigrams, No NLTK, No Sanitize
+BLEU-1 score: 48.377697
+BLEU-2 score: 9.975825
+
+Sanitizing
+BLEU-1 score: 48.651358
+BLEU-2 score: 10.026343
+
+NLTK
+BLEU-1 score: 48.686514
+BLEU-2 score: 10.960826
+
+Trigrams and NLTK
+BLEU-1 score: 48.664281
+BLEU-2 score: 10.934952
+
+Convergence
+BLEU-1 score: 50.482694
+BLEU-2 score: 11.518949
+
+Convergence and NLTK
+BLEU-1 score: 50.482694
+BLEU-2 score: 11.841089
+
+Convergence and Basic Plural
+BLEU-1 score: 50.152981
+BLEU-2 score: 11.265423
