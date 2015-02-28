@@ -22,7 +22,7 @@ class IBM:
         self.spanish_words = set()
         self.progress = 0
         self.maxIter = 10
-        self.threshold = .4
+        self.threshold = .35
 
     def set_threshold(self, thres):
         self.threshold = thres
@@ -46,7 +46,7 @@ class IBM:
 
         for (en_sent, es_sent) in self.sentences:
             for en_word in en_sent:
-                total_s = 0
+                total_s = 0.0
                 for es_word in es_sent:
                     total_s += self.words[es_word][en_word]
 
@@ -105,7 +105,8 @@ class IBM:
         candidates = self.dictionary[word]
 
         if len(candidates) is 0:
-            self.addCandidatesToSentence(partial + " [" + word + "]", sentence[1:], sentences)
+            self.addCandidatesToSentence(partial + " " + word, sentence[1:], sentences)
+            # self.addCandidatesToSentence(partial + " [" + word + "]", sentence[1:], sentences)
             return
 
         if candidates[0][0] < self.threshold:
@@ -133,10 +134,11 @@ def loadSentences(englishFileName, foreignFileName) :
     return sentences
 
 def sanitize(sentence) :
-    sentence = sentence.lower()
-    puncRegex = re.compile("[" + string.punctuation + "]", re.IGNORECASE)
-    sentence = puncRegex.sub(' ', sentence)
-    sentence = sentence.strip()
+    # sentence = sentence.lower()
+    # puncRegex = re.compile("[" + string.punctuation + "]", re.IGNORECASE)
+    # puncRegex = re.compile("[,.?]", re.IGNORECASE)
+    # sentence = puncRegex.sub(' ', sentence)
+    # sentence = sentence.strip()
     return sentence
 
 def posParse(sentence):
