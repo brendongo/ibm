@@ -199,11 +199,12 @@ def processSentence(sentence):
 
 def main():
     # initialize trigram model
-    trigramLanguageModel = TrigramModel("data/ngrams.txt")
+    # trigramLanguageModel = TrigramModel("data/ngrams.txt")
+    trigramLanguageModel = TrigramModel("data/es-en/train/europarl-v7.es-en.en")
     print 'Trigram Model Loaded! \n'
 
     ibm = IBM(loadSentences("data/es-en/train/europarl-v7.es-en.en", "data/es-en/train/europarl-v7.es-en.es"))
-    #ibm = IBM(loadSentences("test.en", "test.es"))
+    # ibm = IBM(loadSentences("test.en", "test.es"))
     result = ibm.preprocess()
     print 'Preproccess done! \n'
 
@@ -215,18 +216,23 @@ def main():
         if kind is "f":
             try:
                 with open(input_data, 'r') as testFile:
-                    bleuFile = open("output-" + input_data, "w+")
+                    # bleuFile = open("output-" + input_data, "w+")
                     for testSentence in testFile:
                         result = ibm.translate(sanitize(testSentence)) # returns array of translations
                         result = postProcess(result)
-                        #result = trigramLanguageModel.findMostLikely(result) # returns best scoring result
-                        bleuFile.write(result[0] + "\n")
-                    bleuFile.close()
+                        result = trigramLanguageModel.findMostLikely(result) # returns best scoring result
+                        print result
+                        # bleuFile.write(result[0] + "\n")
+                    # bleuFile.close()
             except:
                 print "Filename invalid"
                 continue
         elif kind is "s":
             result = ibm.translate(sanitize(input_data)) # returns array of translations
+            print "\nResults: "
+            print result
+            result = postProcess(result)
+            print result
             result = trigramLanguageModel.findMostLikely(result) # returns best scoring result
             print result
         elif kind is "t":
